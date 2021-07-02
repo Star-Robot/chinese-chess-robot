@@ -33,18 +33,11 @@ Status CoreServiceImpl::NodeGreet(
 
     LOG_VERBOSE("[core] NodeGreet from " << nodeName);
     // - Register Node : Node name cannot be repeated
-    std::lock_guard<std::mutex> lock(m_topic_mtx_);
-    if (0 == m_publisher_mapper_.count(nodeName))
-    {
-        reply->set_info("node register success.");
-        reply->set_code(ReplyStatusCode::success);
-        m_publisher_mapper_[nodeName];
-    }
-    else
-    {
-        reply->set_info("This node name already exists.");
-        reply->set_code(ReplyStatusCode::failed);
-    }
+    m_node_mapper_[nodeName].clear();
+    m_kill_subscribe_stream_of_[nodeName] = false;
+    // - set reply
+    reply->set_info("node register success.");
+    reply->set_code(ReplyStatusCode::success);
     return Status::OK;
 }
 
@@ -56,31 +49,30 @@ Status CoreServiceImpl::NodeDisconnect(
     // - parse input
     const std::string& nodeName = request->node_name();
 
-    LOG_VERBOSE("[core] NodeDisconnect from " << nodeName);
     // - delete Node : Node name must be registered
     std::lock_guard<std::mutex> lock(m_topic_mtx_);
-    if (m_publisher_mapper_.count(nodeName))
+    if (m_node_mapper_.count(nodeName))
     {
-        reply->set_info("node disconnect success.");
-        reply->set_code(ReplyStatusCode::success);
-        // - delete all topic from this node
-        for(auto& topicName : m_publisher_mapper_[nodeName])
+        m_kill_subscribe_stream_of_[nodeName] = true;
+        // - Cancel all subscriptions of this node
+        for(auto& topicName : m_node_mapper_[nodeName])
         {
             // - Wake up subscribers who are waiting for the topic, to quit 
             m_topic_mapper_[topicName]->m_input_condition_.notify_all();
-            m_topic_mapper_.erase(topicName);
+            m_topic_mapper_[topicName]->RemoveSubscriber(nodeName);
         }
-        // - Cancel all subscriptions of this node
-        for(auto& topic : m_topic_mapper_)
-            topic.second->RemoveSubscriber(nodeName);
 
-        m_publisher_mapper_.erase(nodeName);
+        m_node_mapper_.erase(nodeName);
+        reply->set_info("node disconnect success.");
+        reply->set_code(ReplyStatusCode::success);
     }
     else
     {
         reply->set_info("This node name does not exists.");
         reply->set_code(ReplyStatusCode::failed);
     }
+
+    LOG_VERBOSE("[core] NodeDisconnect from " << nodeName);
     return Status::OK;
 }
 
@@ -100,16 +92,17 @@ Status CoreServiceImpl::AdvertiseTopic(
     std::lock_guard<std::mutex> lock(m_topic_mtx_);
     if (0 == m_topic_mapper_.count(topicName))
     {
-        Topic::Ptr topicPtr(new Topic(publisherName, topicName, buffSize));
+        Topic::Ptr topicPtr(new Topic(topicName, buffSize));
         m_topic_mapper_[topicName] = topicPtr;
-        m_publisher_mapper_[publisherName].push_back(topicName);
+        m_node_mapper_[publisherName].insert(topicName);
         reply->set_info("topic register success.");
         reply->set_code(ReplyStatusCode::success);
     }
     else
     {
+        m_topic_mapper_[topicName]->SetBufferSize(buffSize);
         reply->set_info("This topic name already exists.");
-        reply->set_code(ReplyStatusCode::failed);
+        reply->set_code(ReplyStatusCode::success);
     }
 	return Status::OK;
 }
@@ -122,23 +115,23 @@ Status CoreServiceImpl::SubscribeTopic(
     // - parse input
     const std::string& subscriberName = request->subscriber_name();
 	const std::string& topicName = request->topic_name();
-
-    
-    // - If this topic does not exist, return
+    // - If this topic does not exist, then Register it
     if (0 == m_topic_mapper_.count(topicName))
     {
-        LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
-            << topicName << ", but topic does not exist.");
-        return Status::OK;
+        Topic::Ptr topicPtr(new Topic(topicName));
+        m_topic_mapper_[topicName] = topicPtr;
     }
 
-    // - Once awakened, push the data to node
+    // - Topics subscribed by the same node cannot be repeated 
+    if (0 == m_node_mapper_[subscriberName].count(topicName))
+        m_node_mapper_[subscriberName].insert(topicName);
+ 
+    // - Try to add AddSubscriber to the topic 
     Topic::Ptr topic = m_topic_mapper_[topicName];
     if (false == topic->AddSubscriber(subscriberName))
     {
-        LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
-            << topicName << ", but duplicated so refused.");
-        return Status::OK;
+        LOG_WARN("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
+            << topicName << ", but duplicated node name.");
     }
 
     LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
@@ -147,16 +140,17 @@ Status CoreServiceImpl::SubscribeTopic(
     LOG_INFO("[core] Establish a connection with " << subscriberName << ", topicName= " 
         << topicName);
     // - Wait for topic notification until the connection is disconnected
-    while(!context->IsCancelled())
+    while(!m_kill_subscribe_stream_of_[subscriberName] || !context->IsCancelled())
     {
         std::unique_lock<std::mutex> lock(topic->m_msg_mtx_);
         topic->m_input_condition_.wait(lock,
-			[context, topic] {
-                return context->IsCancelled() || topic->HasNewMessage();
+			[this, context, topic, subscriberName] {
+                return m_kill_subscribe_stream_of_[subscriberName] || 
+                    context->IsCancelled() || topic->HasNewMessage(subscriberName);
             });
         // - Jump out of the loop if disconnected
-        if (context->IsCancelled()) break;
-        Topic::MessageType msgs = std::move(topic->GetLastestMessage());
+        if (m_kill_subscribe_stream_of_[subscriberName] || context->IsCancelled()) break;
+        Topic::MessageType msgs = std::move(topic->GetLastestMessage(subscriberName));
 		lock.unlock();
         // - Copy the message and start pushing
         TopicData topicData;
@@ -180,7 +174,6 @@ Status CoreServiceImpl::PublishTopic(
 	uint64_t timestamp = request->timestamp();
     const std::string& buffer = request->buffer();
 
-    LOG_VERBOSE("[core] PublishTopic from topicName= " << topicName);
     // - push the data to topic's queue
     Topic::Ptr topic = m_topic_mapper_[topicName];
     std::vector<uint8_t> serializeData(buffer.begin(), buffer.end());

@@ -22,6 +22,7 @@
 #include <memory>
 #include <mutex>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -74,8 +75,9 @@ private:
 private:
 	/// Topic name, indexed data container
     std::map<std::string, std::shared_ptr<huleibao::Topic>> m_topic_mapper_;
-    /// Publisher: [topic1, topic2, ...]
-    std::map<std::string, std::vector<std::string>> m_publisher_mapper_;
+    /// node: [topic1, topic2, ...]
+    std::map<std::string, std::set<std::string>> m_node_mapper_;
+    std::map<std::string, std::atomic_bool> m_kill_subscribe_stream_of_;
     /// Sync lock
     std::mutex m_topic_mtx_;
 };

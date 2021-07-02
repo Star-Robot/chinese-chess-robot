@@ -34,7 +34,7 @@ Node::Node(std::string node_name)
 
 Node::~Node()
 {
-    // -Disconnect itself to core
+    // -Disconnect itself from core
     ByeCore();
 }
 

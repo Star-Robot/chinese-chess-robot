@@ -5,11 +5,15 @@ namespace huleibao
 {
 
 
-Topic::Topic(
-    const std::string& publisher, const std::string& topic_name, int buffer_size)
+Topic::Topic(const std::string& topic_name, int buffer_size)
 {
-    m_publisher_   = publisher;
     m_topic_name_  = topic_name;
+    m_msg_maximum_ = buffer_size;
+}
+
+
+void Topic::SetBufferSize(int buffer_size)
+{
     m_msg_maximum_ = buffer_size;
 }
 
@@ -18,7 +22,7 @@ bool Topic::AddSubscriber(const std::string& subscriber)
 {
     // - The same subscriber cannot subscribe twice
     if (m_subscribers_.count(subscriber)) return false;
-    m_subscribers_.insert(subscriber);
+    m_subscribers_[subscriber] = GetTimeStamp();
     return true;
 }
 
@@ -35,31 +39,47 @@ bool Topic::RemoveSubscriber(const std::string& subscriber)
 void Topic::PushMessage(MessageType&& msg)
 {
     std::lock_guard<std::mutex> lock(m_msg_mtx_);
-    m_message_queue_.push(msg);
+    m_message_queue_.emplace_back(msg);
     // - can not exceed the maximum
     if(m_message_queue_.size()>m_msg_maximum_)
-        m_message_queue_.pop();
+        m_message_queue_.pop_front();
     // - Wake up the pushers who are waiting for this topic
     m_input_condition_.notify_all();
 }
 
 
-bool Topic::HasNewMessage()
+bool Topic::HasNewMessage(const std::string& subscriber)
 {
     // std::lock_guard<std::mutex> lock(m_msg_mtx_);
-    return !m_message_queue_.empty();
+    bool hasNew = false;
+    // - Check whether there are new messages that have not been taken away 
+    for(auto& msg : m_message_queue_)
+    {
+        if (msg.second > m_subscribers_[subscriber])
+        {
+            hasNew = true;
+            break;
+        }
+    }
+    return hasNew;
 }
 
 
-Topic::MessageType Topic::GetLastestMessage()
+Topic::MessageType Topic::GetLastestMessage(const std::string& subscriber)
 {
-    MessageType msg;
-    // std::lock_guard<std::mutex> lock(m_msg_mtx_);
-    if(!m_message_queue_.empty()){
-        msg = std::move(m_message_queue_.front());
-        m_message_queue_.pop();
+    MessageType retMsg;
+    // - find the new messages
+    for(auto& msg : m_message_queue_)
+    {
+        if (msg.second > m_subscribers_[subscriber])
+        {
+            retMsg = msg;
+            break;
+        }
     }
-    return msg;
+    // - Update the lastest timestamp
+    m_subscribers_[subscriber] = retMsg.second;
+    return retMsg;
 }
 
 } // namespace huleibao

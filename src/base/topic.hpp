@@ -15,11 +15,13 @@
 #define topic_hpp__
 
 #include <condition_variable>
+#include <deque>
+#include <map>
 #include <memory>
 #include <mutex>
-#include <queue>
-#include <set>
 #include <string>
+#include <vector>
+
 
 namespace huleibao
 {
@@ -31,10 +33,12 @@ public:
     typedef std::pair<std::vector<uint8_t>, uint64_t> MessageType;
 
     /// Construct a topic container
-    /// \param publisher    : node name who publish this topic
     /// \param topic_name   : the topic name
     /// \param buffer_size  : Maximum number of messages retained
-    Topic(const std::string& publisher, const std::string& topic_name, int buffer_size);
+    Topic(const std::string& topic_name, int buffer_size=1);
+
+    /// reset BufferSize of message
+    void SetBufferSize(int buffer_size);
 
     /// request notification of topics
     bool AddSubscriber(const std::string& subscriber);
@@ -45,21 +49,21 @@ public:
     /// Push messages are stored in the queue
     void PushMessage(MessageType&& msg);
 
-    /// if queue is not empty
-    bool HasNewMessage();
+    /// if has new msg for subscriber 
+    bool HasNewMessage(const std::string& subscriber);
 
-    /// Get the data at the end of the queue
-    MessageType GetLastestMessage();
+    /// take away the new msg for subscriber 
+    MessageType GetLastestMessage(const std::string& subscriber);
 
 private:
     /// Store a particular type of message queue
-    std::queue<MessageType> m_message_queue_;
+    std::deque<MessageType> m_message_queue_;
     /// Maximum number of messages retained
     int m_msg_maximum_;
     /// The name of the node that send the message
     std::string m_publisher_;
-    /// The name of the node that resv the message
-    std::set<std::string> m_subscribers_;
+    /// Mark the timestamp when the subscriber took the message 
+    std::map<std::string, uint64_t> m_subscribers_;
     /// The topic name
     std::string m_topic_name_;
 public:

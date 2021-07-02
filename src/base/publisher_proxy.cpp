@@ -72,7 +72,7 @@ void PublisherProxy::Publish(std::string& topic_name, std::vector<uint8_t>& seri
     if(reply.code() != ReplyStatusCode::success)
         LOG_FATAL(reply.info());
 
-    LOG_INFO(reply.info());
+    LOG_INFO(reply.info() << ", timestamp= " << timestamp);
 
 }
 

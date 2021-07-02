@@ -28,7 +28,6 @@ SubscriberProxy::SubscriberProxy(
 }
 
 
-
 void SubscriberProxy::StreamReaderThread()
 {
     // - Context for the client. It could be used to convey extra information to
@@ -61,6 +60,7 @@ void SubscriberProxy::StreamReaderThread()
         // - Wake up the callback who are waiting for this topic
         m_input_condition_.notify_all();
     }
+    LOG_INFO("StreamReaderThread exit");
 }
 
 }// namespace huleibao
