@@ -19,6 +19,7 @@
 #include <functional>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <map>
 #include <mutex>
 #include <memory>
@@ -51,10 +52,12 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
-#define __Code_location__ std::string("( ") + \
+#define __Code_location__ std::string("(") + \
     (strrchr(__FILE__, '/') ? (strrchr(__FILE__, '/') + 1) : __FILE__)  +  \
-    ", " + std::to_string(__LINE__) + " )"
-#define LOG_TAG (__Code_location__).c_str()
+    ":" + std::to_string(__LINE__) + ")"
+#define LOG_TAG std::setiosflags(std::ios::left) << std::setw(32) \
+    << (__Code_location__).c_str() \
+    << std::resetiosflags(std::ios::left)
 
 #define LOG_VERBOSE(...) \
     std::cout << LOG_TAG << " " << __VA_ARGS__ << std::endl << RESET;
@@ -65,22 +68,18 @@
 #define LOG_ERROR(...) \
     std::cout << RED << LOG_TAG << " " << __VA_ARGS__ << std::endl << RESET;
 #define LOG_FATAL(...) \
-    LOG_ERROR(__VA_ARGS__); \
-    LOG_ERROR("If this message is printed, there is a bug here."); \
-    std::abort();
+    {   \
+        LOG_ERROR(__VA_ARGS__); \
+        LOG_ERROR("If this message is printed, there is a bug here."); \
+        std::abort();   \
+    }
 
 namespace huleibao
 {
-
-/// Commonly used global static function encapsulation
-class Util
-{
-public:
-	Util();
-	~Util();
-
+//////////////// Commonly used global static function encapsulation ////////////
+    
     /// Timestamp accurate to microseconds
-    static int64_t GetTimeStamp();
+    int64_t GetTimeStamp();
 
 	/// Progress visualization function
 	/// \param cnt     : Current loops
@@ -88,24 +87,6 @@ public:
 	/// \param interval: Visual interval
 	static void ShowProgressBar(int cnt, int total, int interval);
 
-	/// String is split into arrays by the specified separator
-	/// \param str   : Input string
-	/// \param intArr: Output arrays
-	/// \param c     : specified separator
-	static void Split(const std::string& str, std::vector<std::string>& intArr, char c);
-
-	/// Replace the specified content in the string
-	/// \param str       : Input string
-	/// \param old_value : specified content
-	/// \param new_value : After replacement
-	static std::string ReplaceAllDistinct(const std::string& str,
-			const std::string& old_value, const std::string& new_value);
-
-	/// delete ' \t \n' from the string
-	/// \param str       : Input string
-    static std::string& Trim(std::string &s);
-
-};
 
 } // namespace huleibao
 #endif//util_hpp__

@@ -14,13 +14,15 @@ void PrintHelp(const char * program) {
   exit(-1);
 }
 
-// template class Publisher<std_msgs::Int8>;
-// template class Subscriber<std_msgs::Int8>;
+void callback(std_msgs::Int8::ConstPtr msg)
+{}
+
 int main()
 {
     Node node("hlbnode");
-    std_msgs::Int8 msg;
-    //Publisher<std_msgs::Int8>::Ptr pub =
-    //    node.Advertise<std_msgs::Int8>("int8_array", 10);
+    Publisher<std_msgs::Int8>::Ptr pub =
+        node.Advertise<std_msgs::Int8>("int8_array", 10);
+    Subscriber<std_msgs::Int8>::Ptr sub =
+        node.Subscribe<std_msgs::Int8>("int8_array", 10, callback);
     return 0;
 }

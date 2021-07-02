@@ -22,6 +22,7 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include "base/subscriber_proxy.hpp"
 
 namespace huleibao
 {
@@ -39,7 +40,6 @@ public:
     /// \param core_stub        : grpc core's stub
     /// \param node_name        : node name who send msg
     /// \param topic_name       : the topic name
-    /// \param serialize_func   : topic's message serialized function
     /// \param buffer_size      : Maximum number of messages retained
     /// \param callback_func    : Subscriber's callback function
     Subscriber(
@@ -48,33 +48,64 @@ public:
         std::string topic_name,
         int buffer_size,
         CallBackFunction callback_func
-    );
+    ):  m_callback_func_(callback_func)
+    {
+        m_proxy_.reset(new SubscriberProxy(
+            core_stub,
+            node_name,
+            topic_name,
+            buffer_size
+        ));
 
-    ~Subscriber();
+        m_proxy_->m_thread_continue_	= true;
+        // - Subscribe to each Node topic and start a stream reading thread
+        m_stream_reader_thread_ = std::thread(&SubscriberProxy::StreamReaderThread, m_proxy_.get());
+        // - In order to avoid the read flow blocking,
+        // - a separate thread for callback processing is started
+        m_callback_thread_ = std::thread(&Subscriber::TopicCallBackThread, this);
+    }
 
-    /// The thread that reads the topic stream executed
-    void StreamReaderThread();
+    /// Deconstructor
+    ~Subscriber()
+    {
+        // - notify all and wait thread exit
+        m_proxy_->m_thread_continue_ = false;
+        m_proxy_->m_input_condition_.notify_all();
+        m_stream_reader_thread_.join();
+        m_callback_thread_.join();
+    }
+
+
     /// The thread that execute Subscriber's callback function
-    void TopicCallBackThread();
+    void TopicCallBackThread()
+    {
+        while (m_proxy_->m_thread_continue_)
+        {
+            std::unique_lock<std::mutex> lock(m_proxy_->m_msg_mtx_);
+            m_proxy_->m_input_condition_.wait(lock,
+                [this] { return !m_proxy_->m_thread_continue_ || !m_proxy_->m_message_queue_.empty(); });
+            // - Jump out of the loop if the thread exits
+            if(!m_proxy_->m_thread_continue_) break;
+
+            SubscriberProxy::MessageType msgs = std::move(m_proxy_->m_message_queue_.front());
+            m_proxy_->m_message_queue_.pop();
+            lock.unlock();
+
+            // - Deserialize buffer to MessageType
+            typename MessageType::Ptr msg(new MessageType());
+            msg->Deserialize(msgs.first);
+            msg->timestamp = msgs.second;
+            // - execuate subscriber's callback function
+            m_callback_func_(msg);
+        }
+    }
+
+
 private:
-    /// Topic handle registered in core
-    std::shared_ptr<StubWrapper> m_core_stub_;
-    /// The topic name
-    std::string m_topic_name_;
-    /// The node name
-    std::string m_node_name_;
-    /// The buffer Maximum
-    int m_buffer_size_;
-    /// Store a particular type of message queue
-    std::queue<typename MessageType::ConstPtr> m_message_queue_;
-    /// Sync lock
-    std::mutex m_msg_mtx_;
+    /// Communication proxy with core 
+    std::shared_ptr<SubscriberProxy> m_proxy_;
     /// Subscriber's callback function
     CallBackFunction m_callback_func_;
-    /// The threads continue flag
-    std::atomic_bool m_thread_continue_;
-    /// when read out  a message
-    std::condition_variable m_input_condition_;
     /// stream reading thread
     std::thread m_stream_reader_thread_;
     /// callback function thread

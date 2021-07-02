@@ -47,8 +47,11 @@ public:
     template <typename MessageType>
     typename Publisher<MessageType>::Ptr Advertise(std::string topic_name, int buffer_size)
     {
-        return typename Publisher<MessageType>::Ptr(new Publisher<MessageType>(
-            m_core_stub_, m_node_name_, topic_name, buffer_size));
+        // return typename Publisher<MessageType>::Ptr(new Publisher<MessageType>(
+        //     m_core_stub_, m_node_name_, topic_name, buffer_size));
+        typename Publisher<MessageType>::Ptr x(new Publisher<MessageType>(
+             m_core_stub_, m_node_name_, topic_name, buffer_size));
+        return x;
     }
 
     /// Factory function to create a message subscriber

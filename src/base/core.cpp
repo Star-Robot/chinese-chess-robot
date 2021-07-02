@@ -33,11 +33,12 @@ Status CoreServiceImpl::NodeGreet(
 
     LOG_VERBOSE("[core] NodeGreet from " << nodeName);
     // - Register Node : Node name cannot be repeated
-    if (0 == m_node_names_.count(nodeName))
+    std::lock_guard<std::mutex> lock(m_topic_mtx_);
+    if (0 == m_publisher_mapper_.count(nodeName))
     {
         reply->set_info("node register success.");
         reply->set_code(ReplyStatusCode::success);
-        m_node_names_.insert(nodeName);
+        m_publisher_mapper_[nodeName];
     }
     else
     {
@@ -57,11 +58,23 @@ Status CoreServiceImpl::NodeDisconnect(
 
     LOG_VERBOSE("[core] NodeDisconnect from " << nodeName);
     // - delete Node : Node name must be registered
-    if (m_node_names_.count(nodeName))
+    std::lock_guard<std::mutex> lock(m_topic_mtx_);
+    if (m_publisher_mapper_.count(nodeName))
     {
         reply->set_info("node disconnect success.");
         reply->set_code(ReplyStatusCode::success);
-        m_node_names_.erase(nodeName);
+        // - delete all topic from this node
+        for(auto& topicName : m_publisher_mapper_[nodeName])
+        {
+            // - Wake up subscribers who are waiting for the topic, to quit 
+            m_topic_mapper_[topicName]->m_input_condition_.notify_all();
+            m_topic_mapper_.erase(topicName);
+        }
+        // - Cancel all subscriptions of this node
+        for(auto& topic : m_topic_mapper_)
+            topic.second->RemoveSubscriber(nodeName);
+
+        m_publisher_mapper_.erase(nodeName);
     }
     else
     {
@@ -84,10 +97,12 @@ Status CoreServiceImpl::AdvertiseTopic(
     LOG_VERBOSE("[core] AdvertiseTopic from " << publisherName << ", topicName= " 
         << topicName << ", buffer_size= " << buffSize);
 	// - Register topic : Topic name cannot be repeated
+    std::lock_guard<std::mutex> lock(m_topic_mtx_);
     if (0 == m_topic_mapper_.count(topicName))
     {
         Topic::Ptr topicPtr(new Topic(publisherName, topicName, buffSize));
         m_topic_mapper_[topicName] = topicPtr;
+        m_publisher_mapper_[publisherName].push_back(topicName);
         reply->set_info("topic register success.");
         reply->set_code(ReplyStatusCode::success);
     }
@@ -110,6 +125,7 @@ Status CoreServiceImpl::SubscribeTopic(
 
     LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
         << topicName);
+    
     // - If this topic does not exist, return
     if (0 == m_topic_mapper_.count(topicName))
         return Status::OK;
@@ -119,6 +135,8 @@ Status CoreServiceImpl::SubscribeTopic(
     if (false == topic->AddSubscriber(subscriberName))
         return Status::OK;
 
+    LOG_INFO("[core] Establish a connection with " << subscriberName << ", topicName= " 
+        << topicName);
     // - Wait for topic notification until the connection is disconnected
     while(!context->IsCancelled())
     {

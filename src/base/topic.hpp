@@ -39,6 +39,9 @@ public:
     /// request notification of topics
     bool AddSubscriber(const std::string& subscriber);
 
+    /// cancel notification of topics
+    bool RemoveSubscriber(const std::string& subscriber);
+
     /// Push messages are stored in the queue
     void PushMessage(MessageType&& msg);
 

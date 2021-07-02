@@ -86,37 +86,4 @@ void Node::ByeCore()
     LOG_INFO(reply.info());
 }
 
-/*
-template <typename MessageType>
-typename Publisher<MessageType>::Ptr Node::Advertise(
-    std::string topic_name, int buffer_size)
-{
-    return Publisher<MessageType>::Ptr(new Publisher<MessageType>(
-        m_core_stub_, m_node_name_, topic_name, buffer_size));
-}
-
-
-template <typename MessageType>
-typename Subscriber<MessageType>::Ptr Node::Subscribe(
-    std::string topic_name,
-    int buffer_size,
-    void(*callback_func)(typename MessageType::ConstPtr))
-{
-    return Subscriber<MessageType>::Ptr(new Subscriber<MessageType>(
-        m_core_stub_, m_node_name_, topic_name, buffer_size, callback_func));
-}
-
-
-template <typename MessageType, typename T>
-typename Subscriber<MessageType>::Ptr Node::Subscribe(
-    std::string topic_name,
-    int buffer_size,
-    void (T::* callback_func)(typename MessageType::ConstPtr),
-    T* obj)
-{
-    auto cbfunc = std::bind(callback_func, obj, std::placeholders::_1);
-    return Subscriber<MessageType>::Ptr(new Subscriber<MessageType>(
-        m_core_stub_, m_node_name_, topic_name, buffer_size, cbfunc));
-}
-*/
 } // namespace huleibao

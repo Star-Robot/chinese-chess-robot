@@ -70,8 +70,10 @@ private:
 private:
 	/// Topic name, indexed data container
     std::map<std::string, std::shared_ptr<huleibao::Topic>> m_topic_mapper_;
-    /// Node names
-    std::set<std::string> m_node_names_;
+    /// Publisher: [topic1, topic2, ...]
+    std::map<std::string, std::vector<std::string>> m_publisher_mapper_;
+    /// Sync lock
+    std::mutex m_topic_mtx_;
 };
 
 

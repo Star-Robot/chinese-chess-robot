@@ -29,6 +29,7 @@
     struct Name: public BaseMsgs                                \
     {                                                           \
     public:                                                     \
+        typedef std::shared_ptr<Name> Ptr;          			\
         typedef const std::shared_ptr<Name> ConstPtr;			\
         virtual std::vector<uint8_t> Serialize();               \
         virtual void Deserialize(std::vector<uint8_t>&);        \

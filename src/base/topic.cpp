@@ -23,6 +23,15 @@ bool Topic::AddSubscriber(const std::string& subscriber)
 }
 
 
+bool Topic::RemoveSubscriber(const std::string& subscriber)
+{
+    // - The same subscriber cannot subscribe twice
+    if (0 == m_subscribers_.count(subscriber)) return false;
+    m_subscribers_.erase(subscriber);
+    return true;
+}
+
+
 void Topic::PushMessage(MessageType&& msg)
 {
     std::lock_guard<std::mutex> lock(m_msg_mtx_);
