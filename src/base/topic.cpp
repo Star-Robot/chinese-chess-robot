@@ -46,7 +46,7 @@ void Topic::PushMessage(MessageType&& msg)
 
 bool Topic::HasNewMessage()
 {
-    std::lock_guard<std::mutex> lock(m_msg_mtx_);
+    // std::lock_guard<std::mutex> lock(m_msg_mtx_);
     return !m_message_queue_.empty();
 }
 
@@ -54,7 +54,7 @@ bool Topic::HasNewMessage()
 Topic::MessageType Topic::GetLastestMessage()
 {
     MessageType msg;
-    std::lock_guard<std::mutex> lock(m_msg_mtx_);
+    // std::lock_guard<std::mutex> lock(m_msg_mtx_);
     if(!m_message_queue_.empty()){
         msg = std::move(m_message_queue_.front());
         m_message_queue_.pop();

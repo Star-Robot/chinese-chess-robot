@@ -67,7 +67,7 @@ void PublisherProxy::Publish(std::string& topic_name, std::vector<uint8_t>& seri
     Status status = m_core_stub_->GetStub()->PublishTopic(&context, topicData, &reply);
     // - Act upon its status.
     if (!status.ok())
-        LOG_FATAL(" - AdvertiseTopic " <<status.error_code() << ": " << status.error_message());
+        LOG_FATAL("AdvertiseTopic " <<status.error_code() << ": " << status.error_message());
 
     if(reply.code() != ReplyStatusCode::success)
         LOG_FATAL(reply.info());

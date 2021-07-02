@@ -12,26 +12,29 @@
 #ifndef util_hpp__
 #define util_hpp__
 
+#include <iostream>
+#include <iomanip>
+#include <cstring>
+#include <string>
+#include <thread>
+#include <unistd.h>
+/*
 #include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <functional>
 #include <fstream>
-#include <iostream>
-#include <iomanip>
 #include <map>
 #include <mutex>
 #include <memory>
 #include <queue>
 #include <stdio.h>
-#include <string.h>
 #include <sys/sem.h>
 #include <sys/stat.h>
-#include <string>
-#include <thread>
 #include <unistd.h>
 #include <vector>
+*/
 //
 //the following are UBUNTU/LINUX ONLY terminal color codes.
 #define RESET       "\033[0m"
@@ -77,16 +80,33 @@
 namespace huleibao
 {
 //////////////// Commonly used global static function encapsulation ////////////
+//
+/// Used to control frequency 
+struct Rate
+{
+    /// Constructor
+    /// \param hz     : frequency 
+    Rate(float hz);
+
+    /// Sleep until the time is up 
+    void Sleep();
+
+    /// sleep interval(milliseconds)
+    int interval;
+};
     
-    /// Timestamp accurate to microseconds
-    int64_t GetTimeStamp();
 
-	/// Progress visualization function
-	/// \param cnt     : Current loops
-	/// \param total   : Total loops
-	/// \param interval: Visual interval
-	static void ShowProgressBar(int cnt, int total, int interval);
+/// Timestamp accurate to microseconds
+int64_t GetTimeStamp();
 
+/// signal handler
+void SignalHandler(int signum);
+
+/// Waiting for signal 
+void Spin();
+
+/// check signal
+bool Ok();
 
 } // namespace huleibao
 #endif//util_hpp__

@@ -123,18 +123,27 @@ Status CoreServiceImpl::SubscribeTopic(
     const std::string& subscriberName = request->subscriber_name();
 	const std::string& topicName = request->topic_name();
 
-    LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
-        << topicName);
     
     // - If this topic does not exist, return
     if (0 == m_topic_mapper_.count(topicName))
+    {
+        LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
+            << topicName << ", but topic does not exist.");
         return Status::OK;
+    }
 
     // - Once awakened, push the data to node
     Topic::Ptr topic = m_topic_mapper_[topicName];
     if (false == topic->AddSubscriber(subscriberName))
+    {
+        LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
+            << topicName << ", but duplicated so refused.");
         return Status::OK;
+    }
 
+    LOG_VERBOSE("[core] SubscribeTopic from " << subscriberName << ", topicName= " 
+        << topicName);
+    
     LOG_INFO("[core] Establish a connection with " << subscriberName << ", topicName= " 
         << topicName);
     // - Wait for topic notification until the connection is disconnected
@@ -176,6 +185,10 @@ Status CoreServiceImpl::PublishTopic(
     Topic::Ptr topic = m_topic_mapper_[topicName];
     std::vector<uint8_t> serializeData(buffer.begin(), buffer.end());
     topic->PushMessage(std::move(Topic::MessageType(serializeData, timestamp)));
+    // - set reply
+    reply->set_info("topic publish success.");
+    reply->set_code(ReplyStatusCode::success);
+	return Status::OK;
 }
 
 } // namespace huleibao

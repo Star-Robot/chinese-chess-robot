@@ -42,14 +42,11 @@ void SubscriberProxy::StreamReaderThread()
     // - Reader for the data we expect from the server.
     std::unique_ptr<ClientReader<TopicData> > reader(
         m_core_stub_->GetStub()->SubscribeTopic(&context, request));
+    LOG_INFO("subscribeTopic " <<m_topic_name_ << " success");
 
     TopicData topicData;
     while (m_thread_continue_ && reader->Read(&topicData))
     {
-        std::cout << "Read topic data "
-            << topicData.topic_name() << " at "
-            << topicData.buffer() << ", "
-            << topicData.timestamp() << std::endl;
         // - parse read out data
         const std::string& topicName = topicData.topic_name();
         uint64_t timestamp = topicData.timestamp();

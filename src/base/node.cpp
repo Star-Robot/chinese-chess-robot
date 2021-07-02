@@ -27,6 +27,8 @@ Node::Node(std::string node_name)
     m_core_stub_.reset(new StubWrapper());
     // -Introduce itself to core
     HiCore();
+    // - Register signal SIGINT and signal handle
+    signal(SIGINT, SignalHandler);
 }
 
 
@@ -48,7 +50,7 @@ void Node::HiCore()
 	// Act upon its status.
 	if (!status.ok())
     {
-        LOG_FATAL(" - HiCore " <<status.error_code() << ": " << status.error_message());
+        LOG_FATAL("HiCore " <<status.error_code() << ": " << status.error_message());
     }
 
     if(reply.code() != ReplyStatusCode::success)
@@ -73,7 +75,7 @@ void Node::ByeCore()
 	// Act upon its status.
 	if (!status.ok())
     {
-        LOG_FATAL(" - ByeCore " <<status.error_code() << ": " << status.error_message());
+        LOG_FATAL("ByeCore " <<status.error_code() << ": " << status.error_message());
     }
 
     if(reply.code() != ReplyStatusCode::success)

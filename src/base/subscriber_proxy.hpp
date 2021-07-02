@@ -15,6 +15,7 @@
 #define subscriber_proxy_hpp__
 
 #include <memory>
+#include <queue>
 #include <string>
 #include <vector>
 
