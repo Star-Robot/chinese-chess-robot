@@ -25,10 +25,12 @@ Node::Node(std::string node_name)
     m_node_name_ = node_name;
     // - Try to connect to the core and get the stub
     m_core_stub_.reset(new StubWrapper());
-    // -Introduce itself to core
+    // - Introduce itself to core
     HiCore();
     // - Register signal SIGINT and signal handle
     signal(SIGINT, SignalHandler);
+    // - Create ParameterServer
+    m_param_service_.reset(new ParameterServer(m_core_stub_));
 }
 
 

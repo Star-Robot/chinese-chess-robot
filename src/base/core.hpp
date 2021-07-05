@@ -71,6 +71,12 @@ private:
     /// publish request of topics
 	Status PublishTopic(
 		ServerContext* context, const TopicData* request, CommonReply* reply) override;
+    /// set global parameter 
+	Status SetParam(
+		ServerContext* context, const Parameter* request, CommonReply* reply) override;
+    /// get global parameter 
+	Status GetParam(
+		ServerContext* context, const Parameter* request, CommonReply* reply) override;
 
 private:
 	/// Topic name, indexed data container
@@ -78,6 +84,8 @@ private:
     /// node: [topic1, topic2, ...]
     std::map<std::string, std::set<std::string>> m_node_mapper_;
     std::map<std::string, std::atomic_bool> m_kill_subscribe_stream_of_;
+    /// parameter container
+    std::map<std::string, std::string> m_param_mapper_;
     /// Sync lock
     std::mutex m_topic_mtx_;
 };

@@ -12,29 +12,14 @@
 #ifndef util_hpp__
 #define util_hpp__
 
+#include <cstring>
 #include <iostream>
 #include <iomanip>
-#include <cstring>
+#include <map>
 #include <string>
 #include <thread>
 #include <unistd.h>
-/*
-#include <atomic>
-#include <chrono>
-#include <cstdio>
-#include <cstdlib>
-#include <functional>
-#include <fstream>
-#include <map>
-#include <mutex>
-#include <memory>
-#include <queue>
-#include <stdio.h>
-#include <sys/sem.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <vector>
-*/
 //
 //the following are UBUNTU/LINUX ONLY terminal color codes.
 #define RESET       "\033[0m"
@@ -107,6 +92,130 @@ void Spin();
 
 /// check signal
 bool Ok();
+
+
+///////////////////////// Parameter Serialization ///////////////////////////////
+std::vector<std::string> Split(const std::string& s, const std::string& delimiters = " ");
+
+template<class T>
+inline std::string ParamToString(T& val)
+{ return std::to_string(val); }
+
+/// bool->str
+template<>
+inline std::string ParamToString<bool>(bool& val)
+{
+    return val?"true":"false";
+}
+
+/// str->str
+template<>
+inline std::string ParamToString<std::string>(std::string& val)
+{
+    return val;
+}
+
+/// str->str
+template<>
+inline std::string ParamToString<const std::string>(const std::string& val)
+{
+    return val;
+}
+
+/// map->str
+template<typename K, typename V>
+inline std::string ParamToString(std::map<K, V>& val)
+{
+    std::string str = "";
+    typename std::map<K, V>::iterator it = val.begin();
+    for (; it != val.end(); it++)
+    {
+        str += ParamToString(it->first) + ":" + ParamToString(it->second);
+        str += "+";
+    }
+    return str;
+}
+///////////////////////// Parameter Serialization ///////////////////////////////
+template<class T>
+T StringToParam(std::string& val);
+
+/// str->int
+template<>
+inline int StringToParam<int>(std::string& val)
+{
+    return std::stoi(val);
+}
+
+/// str->long
+template<>
+inline long StringToParam<long>(std::string& val)
+{
+    return std::stol(val);
+}
+
+/// str->unsigned long
+template<>
+inline unsigned long StringToParam<unsigned long>(std::string& val)
+{
+    return std::stoul(val);
+}
+
+/// str->long long
+template<>
+inline long long StringToParam<long long>(std::string& val)
+{
+    return std::stoll(val);
+}
+
+/// str->float
+template<>
+inline float StringToParam<float>(std::string& val)
+{
+    return std::stof(val);
+}
+
+/// str->double
+template<>
+inline double StringToParam<double>(std::string& val)
+{
+    return std::stod(val);
+}
+
+/// str->bool
+template<>
+inline bool StringToParam<bool>(std::string& val)
+{
+    return val=="true"?true:false;
+}
+
+/// str->str
+template<>
+inline std::string StringToParam<std::string>(std::string& val)
+{
+    return val;
+}
+
+template<typename K, typename V>
+inline std::map<K, V> StringToParam(const std::string& str)
+{
+    std::map<K, V> ret;
+    if (str.empty()) return ret;
+    std::string keySeg("+");
+    std::string valSeg(":");
+    std::vector<std::string> splits = Split(str, keySeg);
+    // LOG_INFO("StringToParam: " << str);
+    std::cout << splits.size() << std::endl;
+    for (auto&& item : splits)
+    {
+        std::cout << item << std::endl;
+        std::string::size_type pos = item.find(valSeg);
+        std::string key = item.substr(0, pos);
+        std::string val = item.substr(pos + valSeg.size());
+        ret[StringToParam<K>(key)] = StringToParam<V>(val);
+    }
+    return ret;
+}
+
 
 } // namespace huleibao
 #endif//util_hpp__

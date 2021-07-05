@@ -184,4 +184,47 @@ Status CoreServiceImpl::PublishTopic(
 	return Status::OK;
 }
 
+
+
+/// publish request of topics
+Status CoreServiceImpl::SetParam(
+    ServerContext* context, const Parameter* request, CommonReply* reply)
+{
+    // - parse input
+	const std::string& paramName = request->param_name();
+	const std::string& paramVal= request->param_val();
+
+    m_param_mapper_[paramName] = paramVal;
+    LOG_INFO("SetParam " << paramName << ": " << paramVal);
+    // - set reply
+    reply->set_info("parameter set success.");
+    reply->set_code(ReplyStatusCode::success);
+	return Status::OK;
+}
+
+
+/// publish request of topics
+Status CoreServiceImpl::GetParam(
+    ServerContext* context, const Parameter* request, CommonReply* reply)
+{
+    // - parse input
+	const std::string& paramName = request->param_name();
+
+    // - set param if exist
+    if (m_param_mapper_.count(paramName))
+    {
+        reply->set_info(m_param_mapper_[paramName]);
+        reply->set_code(ReplyStatusCode::success);
+        LOG_INFO("GetParam " << paramName << ": " << m_param_mapper_[paramName]);
+    }
+    else
+    {
+        reply->set_info("parameter get failed.");
+        reply->set_code(ReplyStatusCode::failed);
+        LOG_INFO("GetParam failed");
+
+    }
+	return Status::OK;
+}
+
 } // namespace huleibao

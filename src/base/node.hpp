@@ -17,6 +17,8 @@
 
 #include <string>
 #include <memory>
+#include "util/util.hpp"
+#include "base/parameter_server.hpp"
 
 namespace huleibao
 {
@@ -89,11 +91,51 @@ public:
     void HiCore();
     /// When the node is shut down, notifu the core
     void ByeCore();
+
+    /// Set the value of the parameter in the global parameter server
+    /// \param param_name  : param name
+    /// \param param_val   : param val 
+    /// \Note: ParamType=[int,long,u-long,longlong,float,double,map<k,v>] 
+    template <typename ParamType>
+    void SetParam(const std::string& param_name, ParamType& param_val)
+    {
+        // - seralized val
+        std::string paramVal = ParamToString(param_val);  
+        m_param_service_->SetParam(param_name, paramVal);
+    }
+
+    /// Get the value of the parameter from the global parameter server
+    /// \param param_name  : param name
+    /// \param default_val : default_val 
+    /// \Note: ParamType=[int,long,u-long,longlong,float,double,map<k,v>] 
+    template <typename ParamType>
+    ParamType GetParam(const std::string& param_name, ParamType default_val=ParamType())
+    {
+        // - seralized val
+        std::string paramVal = m_param_service_->GetParam(param_name, ParamToString(default_val));
+        ParamType data = StringToParam<ParamType>(paramVal);
+        return data;
+    }
+
+    /// Get the value of the parameter from the global parameter server
+    /// \param param_name  : param name
+    template <typename K, typename V>
+    std::map<K,V> GetParam(const std::string& param_name)
+    {
+        // // - seralized val
+        std::string paramVal = m_param_service_->GetParam(param_name);
+        std::map<K,V> data = StringToParam<K,V>(paramVal);
+        return data;
+    }
+
+
 private:
     /// The name of the node that sent the message
     std::string m_node_name_;
     /// Stub used to communicate with core
     std::shared_ptr<StubWrapper> m_core_stub_;
+    /// global parameter server
+    std::shared_ptr<ParameterServer> m_param_service_;
 };
 
 } // namespace huleibao
