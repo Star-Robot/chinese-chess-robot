@@ -28,6 +28,8 @@ Node::Node(std::string node_name)
     // - Introduce itself to core
     HiCore();
     // - Register signal SIGINT and signal handle
+    extern Node* g_node_ptr;
+    g_node_ptr = this;
     signal(SIGINT, SignalHandler);
     // - Create ParameterServer
     m_param_service_.reset(new ParameterServer(m_core_stub_));
@@ -36,8 +38,6 @@ Node::Node(std::string node_name)
 
 Node::~Node()
 {
-    // -Disconnect itself from core
-    ByeCore();
 }
 
 

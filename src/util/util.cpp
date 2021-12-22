@@ -1,6 +1,7 @@
 #include <atomic>
 #include <csignal>
 #include "util/util.hpp"
+#include "base/node.hpp"
 
 
 namespace huleibao
@@ -30,6 +31,9 @@ int64_t GetTimeStamp()
 }
 
 
+/// Node for SayBey 
+Node* g_node_ptr = nullptr;
+
 /// Global signal received flag
 std::atomic_bool g_loop_go(true);
 
@@ -37,6 +41,8 @@ void SignalHandler(int signum)
 {
     LOG_ERROR("Interrupt signal (" << signum << ") received.");
     g_loop_go = false;
+    // -Disconnect itself from core
+    if(g_node_ptr) g_node_ptr->ByeCore();
 }
 
 
