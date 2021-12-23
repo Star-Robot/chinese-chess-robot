@@ -50,10 +50,10 @@ public:
 
 
     /// Push messages with proxy 
-    void Publish(MessageType msg)
+    void Publish(MessageType& msg)
     {
         // - Serialized message
-        std::vector<uint8_t> serializeData = msg.Serialize();
+        std::vector<uint8_t> serializeData = std::move(msg.Serialize());
         m_proxy_->Publish(m_topic_name_, serializeData);
     }
 

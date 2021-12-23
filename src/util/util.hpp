@@ -108,6 +108,13 @@ inline std::string ParamToString<bool>(bool& val)
     return val?"true":"false";
 }
 
+/// const char*->str
+template<>
+inline std::string ParamToString<const char*>(const char*& val)
+{
+    return val;
+}
+
 /// str->str
 template<>
 inline std::string ParamToString<std::string>(std::string& val)

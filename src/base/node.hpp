@@ -97,7 +97,7 @@ public:
     /// \param param_val   : param val 
     /// \Note: ParamType=[int,long,u-long,longlong,float,double,map<k,v>] 
     template <typename ParamType>
-    void SetParam(const std::string& param_name, ParamType& param_val)
+    void SetParam(const std::string& param_name, ParamType param_val)
     {
         // - seralized val
         std::string paramVal = ParamToString(param_val);  
