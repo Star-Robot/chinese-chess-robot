@@ -38,6 +38,8 @@ Node::Node(std::string node_name)
 
 Node::~Node()
 {
+    // - Disconnect from core
+    ByeCore();
 }
 
 
@@ -84,7 +86,7 @@ void Node::ByeCore()
     {
         LOG_INFO("[node] ByeCore reply.code= " << reply.code() << 
             ", reply.info=" << reply.info());
-        LOG_FATAL(reply.info());
+        LOG_ERROR(reply.info());
     }
 
     LOG_INFO(reply.info());

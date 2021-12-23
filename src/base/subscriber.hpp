@@ -62,7 +62,7 @@ public:
         m_proxy_->m_thread_continue_ = true;
         // - Subscribe to each Node topic and start a stream reading thread
         m_stream_reader_thread_ = std::thread(&SubscriberProxy::StreamReaderThread, m_proxy_.get());
-        m_stream_reader_thread_.detach();
+        // m_stream_reader_thread_.detach();
         // - In order to avoid the read flow blocking,
         // - a separate thread for callback processing is started
         m_callback_thread_ = std::thread(&Subscriber::TopicCallBackThread, this);
@@ -75,6 +75,7 @@ public:
         m_proxy_->m_thread_continue_ = false;
         m_proxy_->m_input_condition_.notify_all();
         m_callback_thread_.join();
+        m_stream_reader_thread_.join();
     }
 
 

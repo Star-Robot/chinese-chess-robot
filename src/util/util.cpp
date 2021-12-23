@@ -41,8 +41,11 @@ void SignalHandler(int signum)
 {
     LOG_ERROR("Interrupt signal (" << signum << ") received.");
     g_loop_go = false;
-    // -Disconnect itself from core
+    // - Disconnect itself from core
     if(g_node_ptr) g_node_ptr->ByeCore();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    // - Force exit pragram.
+    std::exit(0);
 }
 
 
