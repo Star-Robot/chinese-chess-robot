@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 project(TinyRos)
+set(PROJECT_VERSION 1.2.3.4)
 
 # Cmake find modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # Find required GRPC package
-LIST(APPEND CMAKE_INCLUDE_PATH "/export/cheguangfu/software/Grpc.sdk/include")
-LIST(APPEND CMAKE_LIBRARY_PATH "/export/cheguangfu/software/Grpc.sdk/lib")
-LIST(APPEND CMAKE_PROGRAM_PATH "/export/cheguangfu/software/Grpc.sdk/bin")
+list(APPEND CMAKE_INCLUDE_PATH "/export/cheguangfu/software/Grpc.sdk/include")
+list(APPEND CMAKE_LIBRARY_PATH "/export/cheguangfu/software/Grpc.sdk/lib")
+list(APPEND CMAKE_PROGRAM_PATH "/export/cheguangfu/software/Grpc.sdk/bin")
 find_package(GRPC REQUIRED)
 set(GRPC_LIBS ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY} ${GRPC_GRPC++_REFLECTION_LIBRARY})
 message(STATUS "GRPC_LIBS: " ${GRPC_LIBS})
@@ -30,10 +31,6 @@ include_directories(${PROTO_SRC_DIR})
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_SRC_DIR} ${TINYROS_PROTO})
 grpc_generate_cpp(GRPC_SRCS GRPC_HDRS ${PROTO_SRC_DIR} ${TINYROS_PROTO})
 
-#OpenCV
-# set(CMAKE_PREFIX_PATH "/export/cheguangfu/software/opencv-3.4/build/install/share/OpenCV/")
-# find_package(OpenCV REQUIRED)
-
 include_directories(./src)
 file(GLOB_RECURSE SOURCES . src/*.cpp)  
 list(APPEND SOURCES ${PROTO_SRCS} ${GRPC_SRCS})
@@ -54,5 +51,45 @@ foreach(TOOL ${TOOLS})
   add_executable(${PREFIX} ${TOOL} ${SOURCES})
   target_link_libraries(${PREFIX} ${LIBS})
   add_dependencies(${PREFIX} tinyros) 
+  list(APPEND BINS ${PREFIX})
 endforeach(TOOL)
+
+##################
+#####install######
+##################
+# Use this snippet *after* PROJECT(xxx):
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation Directory" FORCE)
+# Headers
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/src/" # source directory
+        DESTINATION "include" # target directory
+        FILES_MATCHING # install only matched files
+        PATTERN "node.hpp" # select header files
+        PATTERN "parameter_server.hpp" # select header files
+        PATTERN "publisher.hpp" # select header files
+        PATTERN "publisher_proxy.hpp" # select header files
+        PATTERN "subscriber.hpp" # select header files
+        PATTERN "subscriber_proxy.hpp" # select header files
+        PATTERN "std_msgs.hpp" # select header files
+        PATTERN "util.hpp" # select header files
+        PATTERN "proto" EXCLUDE
+)
+# libraries 
+install(TARGETS tinyros
+        EXPORT TinyRosTargets
+        LIBRARY DESTINATION lib
+)
+# bins 
+install(TARGETS ${BINS} 
+        RUNTIME DESTINATION bin
+)
+
+# 将目标文件可导出文件
+install(EXPORT TinyRosTargets DESTINATION share/cmake)
+# 生成 TinyRosConfig.cmake
+configure_file(${CMAKE_SOURCE_DIR}/TinyRosConfig.cmake.in 
+               ${CMAKE_BINARY_DIR}/cmake/TinyRosConfig.cmake COPYONLY
+)
+install(FILES ${CMAKE_BINARY_DIR}/cmake/TinyRosConfig.cmake 
+DESTINATION share/cmake
+)
 
