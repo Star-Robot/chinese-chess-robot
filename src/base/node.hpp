@@ -15,6 +15,7 @@
 #define node_hpp__
 
 
+#include <functional>
 #include <string>
 #include <memory>
 #include "util/util.hpp"

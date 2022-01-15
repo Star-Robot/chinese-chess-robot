@@ -32,10 +32,14 @@ public:
     StubWrapper()
     {
         // - Try to connect to the core and get the stub
-        std::shared_ptr<Channel> channel(
-            grpc::CreateChannel("127.0.0.1:50051",
-            grpc::InsecureChannelCredentials())
-        );
+        // std::shared_ptr<Channel> channel(
+        //     grpc::CreateChannel("127.0.0.1:50051",
+        //     grpc::InsecureChannelCredentials())
+        // );
+        grpc::ChannelArguments ch_args;
+        ch_args.SetMaxReceiveMessageSize(-1);
+        std::shared_ptr<grpc::Channel> channel = 
+        	grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(), ch_args);
         m_core_stub_ = std::move(CoreSrv::NewStub(channel));
     }
 

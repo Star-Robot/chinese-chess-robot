@@ -14,6 +14,7 @@
 #ifndef subscriber_proxy_hpp__
 #define subscriber_proxy_hpp__
 
+#include <condition_variable>
 #include <memory>
 #include <queue>
 #include <string>

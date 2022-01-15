@@ -9,18 +9,21 @@ namespace huleibao
 void Core::Start()
 {
     std::string serverAddress("0.0.0.0:50051");
-	// Listen on the given address without any authentication mechanism.
-	m_builder_.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
-	// Register "service" as the instance through which we'll communicate with
-	// clients. In this case it corresponds to an *synchronous* service.
+    // set max message size= 32MB
+    const int maxMsgSize = 32*1024*1024;
+    m_builder_.SetMaxReceiveMessageSize(maxMsgSize);
+    // Listen on the given address without any authentication mechanism.
+    m_builder_.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
+    // Register "service" as the instance through which we'll communicate with
+    // clients. In this case it corresponds to an *synchronous* service.
     m_core_srv_.reset(new CoreServiceImpl());
-	m_builder_.RegisterService(m_core_srv_.get());
-	// Finally assemble the server.
-	m_server_ = m_builder_.BuildAndStart();
+    m_builder_.RegisterService(m_core_srv_.get());
+    // Finally assemble the server.
+    m_server_ = m_builder_.BuildAndStart();
     LOG_WARN("[core] Start"); 
-	// Wait for the server to shutdown. Note that some other thread must be
-	// responsible for shutting down the server for this call to ever return.
-	m_server_->Wait();
+    // Wait for the server to shutdown. Note that some other thread must be
+    // responsible for shutting down the server for this call to ever return.
+    m_server_->Wait();
 }
 
 
@@ -31,12 +34,13 @@ Status CoreServiceImpl::NodeGreet(
     // - parse input
     const std::string& nodeName = request->node_name();
 
-    LOG_VERBOSE("[core] NodeGreet from " << nodeName);
+    LOG_VERBOSE("[core] Node " << nodeName << " registered.");
     // - Register Node : Node name cannot be repeated
     m_node_mapper_[nodeName].clear();
     m_kill_subscribe_stream_of_[nodeName] = false;
     // - set reply
-    reply->set_info("node register success.");
+    std::string info = std::string("Node ") + nodeName + " registered.";
+    reply->set_info(info);
     reply->set_code(ReplyStatusCode::success);
     return Status::OK;
 }
@@ -63,16 +67,18 @@ Status CoreServiceImpl::NodeDisconnect(
         }
 
         m_node_mapper_.erase(nodeName);
-        reply->set_info("node disconnect success.");
+    	std::string info = std::string("Node ") + nodeName + " disconnected.";
+        reply->set_info(info);
         reply->set_code(ReplyStatusCode::success);
     }
     else
     {
-        reply->set_info("This node name does not exists.");
+    	std::string info = std::string("Node ") + nodeName + " is not found.";
+        reply->set_info(info);
         reply->set_code(ReplyStatusCode::failed);
     }
 
-    LOG_VERBOSE("[core] NodeDisconnect from " << nodeName);
+    LOG_VERBOSE("[core] Node " << nodeName << " disconnected.");
     return Status::OK;
 }
 
@@ -83,28 +89,30 @@ Status CoreServiceImpl::AdvertiseTopic(
 {
     // - parse input
     const std::string& publisherName = request->publisher_name();
-	const std::string& topicName = request->topic_name();
-	int buffSize = request->buffer_size();
+    const std::string& topicName = request->topic_name();
+    int buffSize = request->buffer_size();
 
     LOG_VERBOSE("[core] AdvertiseTopic from " << publisherName << ", topicName= " 
         << topicName << ", buffer_size= " << buffSize);
-	// - Register topic : Topic name cannot be repeated
+    // - Register topic : Topic name cannot be repeated
     std::lock_guard<std::mutex> lock(m_topic_mtx_);
     if (0 == m_topic_mapper_.count(topicName))
     {
         Topic::Ptr topicPtr(new Topic(topicName, buffSize));
         m_topic_mapper_[topicName] = topicPtr;
         m_node_mapper_[publisherName].insert(topicName);
-        reply->set_info("topic register success.");
+	std::string info = std::string("Topic ") + topicName + " registered.";
+        reply->set_info(info);
         reply->set_code(ReplyStatusCode::success);
     }
     else
     {
         m_topic_mapper_[topicName]->SetBufferSize(buffSize);
-        reply->set_info("This topic name already exists.");
+	std::string info = std::string("Topic ") + topicName + " already registered.";
+        reply->set_info(info);
         reply->set_code(ReplyStatusCode::success);
     }
-	return Status::OK;
+    return Status::OK;
 }
 
 
@@ -114,7 +122,7 @@ Status CoreServiceImpl::SubscribeTopic(
 {
     // - parse input
     const std::string& subscriberName = request->subscriber_name();
-	const std::string& topicName = request->topic_name();
+    const std::string& topicName = request->topic_name();
     // - If this topic does not exist, then Register it
     if (0 == m_topic_mapper_.count(topicName))
     {
@@ -144,14 +152,14 @@ Status CoreServiceImpl::SubscribeTopic(
     {
         std::unique_lock<std::mutex> lock(topic->m_msg_mtx_);
         topic->m_input_condition_.wait(lock,
-			[this, context, topic, subscriberName] {
+            [this, context, topic, subscriberName] {
                 return m_kill_subscribe_stream_of_[subscriberName] || 
                     context->IsCancelled() || topic->HasNewMessage(subscriberName);
             });
         // - Jump out of the loop if disconnected
         if (m_kill_subscribe_stream_of_[subscriberName] || context->IsCancelled()) break;
         Topic::MessageType msgs = std::move(topic->GetLastestMessage(subscriberName));
-		lock.unlock();
+        lock.unlock();
         // - Copy the message and start pushing
         TopicData topicData;
         topicData.set_topic_name(topicName);
@@ -161,7 +169,7 @@ Status CoreServiceImpl::SubscribeTopic(
     }
     // - 断开连接
     LOG_WARN("[core] connection is disconnected from " << subscriberName);
-	return Status::OK;
+    return Status::OK;
 }
 
 
@@ -170,8 +178,8 @@ Status CoreServiceImpl::PublishTopic(
     ServerContext* context, const TopicData* request, CommonReply* reply)
 {
     // - parse input
-	const std::string& topicName = request->topic_name();
-	uint64_t timestamp = request->timestamp();
+    const std::string& topicName = request->topic_name();
+    uint64_t timestamp = request->timestamp();
     const std::string& buffer = request->buffer();
 
     // - push the data to topic's queue
@@ -179,9 +187,10 @@ Status CoreServiceImpl::PublishTopic(
     std::vector<uint8_t> serializeData(buffer.begin(), buffer.end());
     topic->PushMessage(std::move(Topic::MessageType(serializeData, timestamp)));
     // - set reply
-    reply->set_info("topic publish success.");
+    std::string info = std::string("Topic ") + topicName + " publish";
+    reply->set_info(info);
     reply->set_code(ReplyStatusCode::success);
-	return Status::OK;
+    return Status::OK;
 }
 
 
@@ -191,15 +200,15 @@ Status CoreServiceImpl::SetParam(
     ServerContext* context, const Parameter* request, CommonReply* reply)
 {
     // - parse input
-	const std::string& paramName = request->param_name();
-	const std::string& paramVal= request->param_val();
+    const std::string& paramName = request->param_name();
+    const std::string& paramVal= request->param_val();
 
     m_param_mapper_[paramName] = paramVal;
-    LOG_INFO("SetParam " << paramName << ": " << paramVal);
+    // LOG_INFO("SetParam " << paramName << ": " << paramVal);
     // - set reply
     reply->set_info("parameter set success.");
     reply->set_code(ReplyStatusCode::success);
-	return Status::OK;
+    return Status::OK;
 }
 
 
@@ -208,23 +217,23 @@ Status CoreServiceImpl::GetParam(
     ServerContext* context, const Parameter* request, CommonReply* reply)
 {
     // - parse input
-	const std::string& paramName = request->param_name();
+    const std::string& paramName = request->param_name();
 
     // - set param if exist
     if (m_param_mapper_.count(paramName))
     {
         reply->set_info(m_param_mapper_[paramName]);
         reply->set_code(ReplyStatusCode::success);
-        LOG_INFO("GetParam " << paramName << ": " << m_param_mapper_[paramName]);
+        // LOG_INFO("GetParam " << paramName << ": " << m_param_mapper_[paramName]);
     }
     else
     {
         reply->set_info("parameter get failed.");
         reply->set_code(ReplyStatusCode::failed);
-        LOG_INFO("GetParam failed");
+        // LOG_INFO("GetParam failed");
 
     }
-	return Status::OK;
+    return Status::OK;
 }
 
 } // namespace huleibao
