@@ -29,3 +29,11 @@ follows two of the five philosophical goals of the original pipeline:
 + Free and open-source: we adopt the BSD license, allowing users to employ it for development in non-commercial and commercial projects. 
 
  <img src="./images/tinyros.jpg" height="500">
+ 
+ ## 2. Mechanical Design
+ 
+ Todo
+ 
+ ## 3. Chess Recognition
+ 
+ Todo
