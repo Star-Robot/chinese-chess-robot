@@ -39,7 +39,8 @@ follows two of the five philosophical goals of the original pipeline:
  Todo
  
  ## 4. Our Chess Dataset
-  <img src="./images/dataset.jpg" height="300">
+Using different materials, we produced three chessboards, i.e., wood, stainless steel, and acrylic (see Fig. 4). Our dataset consists of 888 images taken by the camera mounted on the robotic arm. Next, the object detection box of chess pieces was manually labeled. Since there are 32 chess pieces in Chinese chess, 888 × 32 = 28, 416 object boxes were generated. 
+<img src="./images/dataset.jpg" height="300">
  
  BaiduDrive：https://pan.baidu.com/s/10JhYSNpMmbTfBLIbXO0tBQ 
  Code：osko
