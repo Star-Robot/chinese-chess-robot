@@ -1,0 +1,49 @@
+#include "config.hpp"
+
+/**
+ * @brief 上位机PC与核心板之间进行通讯的串口号
+ */
+// const int Config::uart_host_name = 4;
+/**
+ * @brief 核心板与机械臂控制板之间通讯串口的信息
+ * 包括串口的通讯频率、串口号
+ */
+const speed_t Config::serial_freq = B1000000;
+// const speed_t Config::serial_freq = B115200;
+const int Config::serial_name = 0;
+/**
+ * @brief 机械臂上臂的设置参数
+ * 包括串口通讯地址id，长度(mm)，初始化的角度(°)，运行的角度范围(°)
+ */
+const int Config::upper_arm_id = 3;
+const float Config::upper_arm_len = 180.0;
+const float Config::upper_arm_init_angle = 304.0;
+const std::vector<float> Config::upper_arm_angle_range = std::vector<float>{60, 300};
+/**
+ * @brief 机械臂下臂的设置参数
+ * 包括串口通讯地址id，长度(mm)，初始化的角度(°)
+ */
+const int Config::lower_arm_id = 2;
+const float Config::lower_arm_len = 200.0;
+const float Config::lower_arm_init_angle = 100.0;
+/**
+ * @brief 机械臂上下臂运行的最大最小速度
+ */
+const int Config::min_arm_omiga = 80;
+const int Config::max_arm_omiga = 100;
+/**
+ * @brief 机械臂末端执行器到手肘的设置参数
+ * 包括末端执行器的id，转动的速度，长度(mm)，初始化的角度(°)，抓取棋子和放下棋子时的角度值(°)
+ */
+const int Config::hand_id = 1;
+const int Config::hand_omiga = 80;
+const float Config::hand_len = 201.0;
+const float Config::hand_init_angle = 123.0;
+const float Config::hand_take_angle = 0.0;
+const float Config::hand_drop_angle = 360.0;
+/**
+ * @brief 机械臂末端执行的设置参数
+ * 包括长度(mm)和偏移的角度(°)
+ */
+const float Config::wrist_len = 20.0;
+const float Config::wrist_angle = 5.71;

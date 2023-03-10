@@ -1,0 +1,134 @@
+###星辰臂 · 中国象棋配置###
+game_config:
+    #### 主节点名单 ####
+    member:
+        - camera
+        - calibrator
+        - detector
+        - situator
+        - arm
+
+    #### 1.相机配置 ####
+    camera:
+        device_id    : 9
+        height       : 1536
+        width        : 2048
+        intrinsic    : [1.21041377e+03,0.,1.03650647e+03,0.,1.18948721e+03,7.50769406e+02,0,0,1]
+        distortion   : [0.02537287,-0.15482723,-0.0075529,0.00576856,0.16955644]
+        grab_times   : 1   # 每次行动抓取图像帧数
+        grab_interval: 0.5 # 图像帧之间的时间间隔
+
+
+    #### 2.棋盘配置 ####
+    chess:
+        piece_radius      : 1.4  #cm，棋子半径
+        chessboard_height : 25.2 #cm，棋格高度
+        chessboard_width  : 23.5 #cm，棋格宽度
+        markerboard_height: 31.1 #cm，marker中心点中间，高度
+        markerboard_width : 34.1 #cm，marker中心点中间，宽度
+        viewboard_height  : 34.7 #cm，marker的外围盒，高度
+        viewboard_width   : 38.1 #cm，marker的外围盒，宽度
+        vis_affined_scale : 20.0 #系数，把厘米转成像素，输入给网络
+        board_rows        : 10
+        board_cols        : 9
+
+    #### 3.检测器配置 ####
+    detector:
+        labelMap:
+            1 : red_ju
+            2 : red_bing
+            3 : red_xiang
+            4 : black_zu
+            5 : red_pao
+            6 : red_ma
+            7 : black_ma
+            8 : red_shi
+            9 : red_shuai
+            10: black_pao
+            11: black_xiang
+            12: black_shi
+            13: black_jiang
+            14: black_ju
+        net_model : ./weights/chess_detector_slim_noquat.rknn
+        input_h   : 512
+        input_w   : 512
+
+    #### 4.Arm配置 ####
+    arm:
+        calib                : ./arm/calib.yaml 
+        serial_name          : COM5
+        uart_baud            : 1000000
+        arrive_region        : [0, 0, chess.viewboard_width, chess.viewboard_height]
+        upper_arm_id         : 1
+        upper_arm_len        : 180.0
+        upper_arm_init_angle : 299
+        upper_arm_angle_range: [60,300]
+        lower_arm_id         : 2
+        lower_arm_len        : 202.0
+        lower_arm_init_angle : 83
+        min_arm_omiga        : 80
+        max_arm_omiga        : 100
+        hand_id              : 4
+        hand_omiga           : 80
+        hand_len             : 204.7
+        hand_init_angle      : 360.0
+        hand_take_angle      : 230.0
+        hand_drop_angle      : 9.0
+        wrist_len            : 33.15
+        wrist_angle          : 9.32
+
+    #### 5.Voice配置 ####
+    voice:
+        sound_device_name               : plughw:CARD=rockchiprk809co,DEV=0
+        sound_name_to_file:
+            power_on                    : ./sound/v_power_on.mp3
+            system_ready                : ./sound/v_system_ready.mp3
+            connect_bluetooth           : ./sound/v_connect_bluetooth.mp3
+            lose_bluetooth              : ./sound/v_lose_bluetooth.mp3
+            mode_ctrl_arm_calibrator    : ./sound/v_enter_arm_calibrator.mp3
+            mode_ctrl_arm_tester        : ./sound/v_enter_arm_tester.mp3
+            mode_ctrl_chinese_chess     : ./sound/v_enter_chinese_chess.mp3
+            stop_mode_arm_calibrator    : ./sound/v_exit_arm_calibrator.mp3
+            stop_mode_arm_tester        : ./sound/v_exit_arm_tester.mp3
+            stop_mode_chinese_chess     : ./sound/v_exit_chinese_chess.mp3
+            arm_tester_outofbound       : ./sound/v_arm_tester_outofbound.mp3
+            arm_tester_load_success     : ./sound/v_arm_tester_load_success.mp3
+            arm_tester_load_failed      : ./sound/v_arm_tester_load_failed.mp3
+            arm_calibrator_1            : ./sound/v_arm_calibrator_lu.mp3
+            arm_calibrator_2            : ./sound/v_arm_calibrator_ru.mp3
+            arm_calibrator_3            : ./sound/v_arm_calibrator_ld.mp3
+            arm_calibrator_4            : ./sound/v_arm_calibrator_rd.mp3
+            arm_calibrator_save         : ./sound/v_arm_calibrator_save.mp3
+            game_starting               : ./sound/v_game_starting.mp3
+            game_fighting               : ./sound/v_game_fighting.mp3
+            game_scanning               : ./sound/v_game_scanning.mp3
+            game_locking                : ./sound/v_game_locking.mp3
+            game_move                   : ./sound/v_game_move.mp3
+            game_human_round            : ./sound/v_game_human_round.mp3
+            game_human_illegal          : ./sound/v_game_human_illegal.mp3
+            game_rearrange              : ./sound/v_game_rearrange.mp3
+            game_rearrange_red_ju       : ./sound/v_game_rearrange_red_ju.mp3
+            game_rearrange_red_bing     : ./sound/v_game_rearrange_red_bing.mp3
+            game_rearrange_red_xiang    : ./sound/v_game_rearrange_red_xiang.mp3
+            game_rearrange_black_zu     : ./sound/v_game_rearrange_black_zu.mp3
+            game_rearrange_red_pao      : ./sound/v_game_rearrange_red_pao.mp3
+            game_rearrange_red_ma       : ./sound/v_game_rearrange_red_ma.mp3
+            game_rearrange_black_ma     : ./sound/v_game_rearrange_black_ma.mp3
+            game_rearrange_red_shi      : ./sound/v_game_rearrange_red_shi.mp3
+            game_rearrange_red_shuai    : ./sound/v_game_rearrange_red_shuai.mp3
+            game_rearrange_black_pao    : ./sound/v_game_rearrange_black_pao.mp3
+            game_rearrange_black_xiang  : ./sound/v_game_rearrange_black_xiang.mp3
+            game_rearrange_black_shi    : ./sound/v_game_rearrange_black_shi.mp3
+            game_rearrange_black_jiang  : ./sound/v_game_rearrange_black_jiang.mp3
+            game_rearrange_black_ju     : ./sound/v_game_rearrange_black_ju.mp3
+            game_system_failure         : ./sound/v_game_system_failure.mp3
+            game_human_win              : ./sound/v_game_human_win.mp3
+            game_robot_win              : ./sound/v_game_robot_win.mp3
+            game_select_level           : ./sound/v_game_select_level.mp3
+            game_godlike_level          : ./sound/v_game_godlike_level.mp3
+            game_supermaster_level      : ./sound/v_game_supermaster_level.mp3
+            game_master_level           : ./sound/v_game_master_level.mp3
+            game_professional_level     : ./sound/v_game_professional_level.mp3
+            game_amateur_level          : ./sound/v_game_amateur_level.mp3
+            game_beginner_level         : ./sound/v_game_beginner_level.mp3
+            game_robotmate              : ./sound/v_game_robotmate.mp3
