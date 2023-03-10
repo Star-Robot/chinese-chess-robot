@@ -37,3 +37,7 @@ follows two of the five philosophical goals of the original pipeline:
  ## 3. Chess Recognition
  
  Todo
+ 
+ ## 4. Our Chess Dataset
+ BaiduDrive：https://pan.baidu.com/s/10JhYSNpMmbTfBLIbXO0tBQ 
+ Code：osko
