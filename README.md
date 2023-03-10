@@ -1,7 +1,7 @@
 # chinese-chess-robot
 An Open-Source Robotic Chinese Chess Player
 
-**Authors:** Shan An, Guangfu Che, Jinghao Guo, Yanjie Xu, Junjie Ye, Guoxin Wang, Konstantinos A. Tsintotas, Fukai Zhang, Changhong Fu, Haogang Zhu, and Hong Zhang.
+**Authors:** Shan An, Guangfu Che, Jinghao Guo, Yanjie Xu, Guoxin Wang, Konstantinos A. Tsintotas, Fukai Zhang, Junjie Ye, Changhong Fu, Haogang Zhu, and Hong Zhang.
 
 ## 0. Overview
 
