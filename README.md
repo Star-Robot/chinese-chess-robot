@@ -39,5 +39,9 @@ follows two of the five philosophical goals of the original pipeline:
  Todo
  
  ## 4. Our Chess Dataset
+  <img src="./images/dataset.jpg" height="300">
+ 
  BaiduDrive：https://pan.baidu.com/s/10JhYSNpMmbTfBLIbXO0tBQ 
  Code：osko
+ 
+ 
