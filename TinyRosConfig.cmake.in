@@ -1,6 +1,0 @@
-include(CMakeFindDependencyMacro)
-
-include("${CMAKE_CURRENT_LIST_DIR}/TinyRosTargets.cmake")
-set(TinyRos_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../../include)
-set(TinyRos_LINK_DIRS ${CMAKE_CURRENT_LIST_DIR}/../../lib)
-set(TinyRos_LIBRARIES tinyros)
