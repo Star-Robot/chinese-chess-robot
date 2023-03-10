@@ -17,3 +17,12 @@ users’ chess skills. Aiming to facilitate future consumer robot research and p
 + A ingenuity mechanical structure design allowing low price and practicality.
 
  <img src="./images/teaser_m.jpg" height="300">
+
+## 1. TinyROS
+
+We propose TinyROS specifically for consumer robots. Our system is a lightweight, compact mechanism for robotic message communication that
+follows two of the five philosophical goals of the original pipeline:
+
+**The goal:** 
++ Thin: our version is tiny as it is written in C++ with 2112 total lines of code. 
++ Free and open-source: we adopt the BSD license, allowing users to employ it for development in non-commercial and commercial projects. 
