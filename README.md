@@ -26,3 +26,5 @@ follows two of the five philosophical goals of the original pipeline:
 **The goal:** 
 + Thin: our version is tiny as it is written in C++ with 2112 total lines of code. 
 + Free and open-source: we adopt the BSD license, allowing users to employ it for development in non-commercial and commercial projects. 
+
+ <img src="./images/tinyros.jpg" height="300">
