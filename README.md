@@ -38,8 +38,7 @@ follows two of the five philosophical goals of the original pipeline:
  
 There are a lot of off-the-shelf object detection algorithms. We carefully choose a fast and high-accuracy object detection network named YOLOv7. The YOLOv7-Tiny is a lightweight and improved version of YOLOv7, with some feature layers removed, and can achieve faster inference and higher accuracy. Therefore, YOLOv7-tiny is suitable for deployment on embedded devices.
 
-
-
+<img src="./images/yolores.jpg" height="300">
  
  ## 4. Our Chess Dataset
 Using different materials, we produced three chessboards, i.e., wood, stainless steel, and acrylic (see Fig. 4). Our dataset consists of 888 images taken by the camera mounted on the robotic arm. Next, the object detection box of chess pieces was manually labeled. Since there are 32 chess pieces in Chinese chess, 888 × 32 = 28, 416 object boxes were generated. 
