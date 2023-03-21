@@ -32,7 +32,7 @@ follows two of the five philosophical goals of the original pipeline:
  
  ## 2. Mechanical Design
  
- Todo
+ Our mechanical design is located in another repository: https://github.com/Star-Robot/chinese-chess-robot-mechanical
  
  ## 3. Chess Recognition
  
