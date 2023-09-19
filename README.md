@@ -29,6 +29,9 @@ follows two of the five philosophical goals of the original pipeline:
 + Free and open-source: we adopt the BSD license, allowing users to employ it for development in non-commercial and commercial projects. 
 
  <img src="./images/tinyros.jpg" height="500">
+
+ If you have used TinyROS, you are welcome to leave your information to facilitate our subsequent technical support.
+ https://wj.qq.com/s2/13162005/f0ad/
  
  ## 2. Mechanical Design
  
